@@ -1,8 +1,4 @@
 
-# guardian.ng 
-# 8th most widely read in Nigeria based on this very scientific source: https://answersafrica.com/top-10-nigerian-newspapers-most-read-online.html
-%cd './Desktop'
-%reset -f
 import urllib.request
 from bs4 import BeautifulSoup 
 from time import sleep 
@@ -11,9 +7,7 @@ from datetime import datetime, timedelta, date
 import re
 
 
-# sitemap in: 
-
-site_url = "https://guardian.ng/sitemap.xml"
+# sitemap in site_url = "https://guardian.ng/sitemap.xml"
 
 def read_sitemap(site_url, compressed=False):   
     req = urllib.request.Request(site_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -53,49 +47,36 @@ def parse_guardianng(html):
     soup = BeautifulSoup(html, 'lxml')
     hold_dict['title'] = soup.find(class_=re.compile(r'after-category')).text.replace("\xa0", "") 
     author = soup.find(class_=re.compile(r'author')).text.strip().replace("By ", "")
-    if ',' in author:  # split() won't give you error
-        hold_dict['authors'] = author[0:(str.find(author, ','))] # keeping only first author if there are multiple. Doing this because city often included
-    else:
-        hold_dict['authors'] = author 
-    date = soup.find(class_=re.compile(r'manual-age')).text.strip()
-    .join(soup.find...strip()) #replace with this, keep time
-    hold_dict['date'] = date[0:(str.find(date, "\xa0"))] # Date
-    article_body = soup.find('article')
-    body = [paragraph.text for paragraph in article_body.find_all('p', recursive=False)]
-    hold_dict['paragraphs'] = [par.split("\n\xa0\n") for par in body if par is not ''] # getting paragraphs indexed by line breaks too
+    hold_dict['authors'] = author.split(',')[0] # remove cities or positions
+    hold_dict['date'] = ' '.join(soup.find(class_=re.compile(r'manual-age')).text.split())
+    hold_dict['image_urls'] = []
+    hold_dict['image_captions'] = []
     if soup.article.find_all('img'):
-        names = [i['src'] for i in soup.article.find_all('img')]
-        hold_dict['image_urls'] = [n for n in names if '1x1.trans' not in n]
+        hold_dict['image_urls'] = [i['src'] for i in soup.article.find_all('img') if '/plugins/' not in i['src']]
         captions = soup.find_all(class_=re.compile(r'caption'))
         hold_dict['image_captions'] = list(set([c.text.strip() for c in captions]))
-    else: 
-        hold_dict['image_urls'] = []
-        hold_dict['image_captions'] = []
+    # First paragraph always hanging without tag. If all text, also caption. 
+    # So take all text and remove matched caption on first par only. Hence finding captions first
+    body = soup.find('article').text 
+    hold_dict['paragraphs'] =  list(filter(None, body.split('\n'))) # getting paragraphs indexed by line breaks; if by 'p', first par is lost. Remove potential empty ones.
+    if hold_dict['image_captions']:
+        hold_dict['paragraphs'][0] = hold_dict['paragraphs'][0].replace(hold_dict['image_captions'][0], '') #remove caption match
+        hold_dict['paragraphs'] = list(filter(None,  hold_dict['paragraphs'])) # Remove empty ones. Important to do this again in case all caption was first par  
     return(hold_dict)
-         
-#collect_guardianng()              
-urls = open('guardianng.txt', "r").read().splitlines() 
-#html = urllib.request.urlopen(urls[0]).read()
-urls2 = urls[0:10]
-url = urls2[0]
-for url in tqdm(urls2):   
-    html = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})).read()
-    parse_guardianng(html)
-    print(url)
-    sleep(0.5)
-      
-bod = soup.find('div', {'class':'single-article-content'})
-text = bod.article.text
-cap = bod.find('div', class_='wp-caption alignnone').text
-text.replace(cap, '')
-
-types = [type(ii) for ii in bod]
-
-## LOOK INTO DATETIME OBJECTS
 
 
-# Still catching some crap at the beginning of the text and sometimes not capturing first paragraph
-# because it's poorly tagged. Fix this somehow. 
+# example url: https://guardian.ng/news/putin-warns-of-consequences-over-orthodox-split/        
+# Check links 
+# =============================================================================
+# collect_guardianng()              
+# urls = open('guardianng.txt', "r").read().splitlines() 
+# for url in tqdm(urls2):   
+#     html = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})).read()
+#     parse_guardianng(html)
+#     print(url)
+#     sleep(1)
+# =============================================================================
+    
     
     
     
