@@ -68,7 +68,6 @@ def parse_guardianng(html):
 # example url: https://guardian.ng/news/putin-warns-of-consequences-over-orthodox-split/        
 # Check links 
 # =============================================================================
-# collect_guardianng()              
 # urls = open('guardianng.txt', "r").read().splitlines() 
 # for url in tqdm(urls2):   
 #     html = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})).read()
@@ -107,6 +106,19 @@ def parse_champion(html):
         hold_dict['image_urls'] = soup.article.find('img', {'class':'entry-thumb'})['src']
     return(hold_dict)    
     
-    
+# example url: "http://www.championnews.com.ng/inec-speaks-possibility-postponing-elections/"
+# Check links 
+# =============================================================================
+# urls = open('champion.txt', "r").read().splitlines() 
+# for url in tqdm(urls2):   
+#     html = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})).read()
+#     parse_champion(html)
+#     print(url)
+#     sleep(0.5)
+# =============================================================================
+
+
+  
+       
     
     
