@@ -78,7 +78,34 @@ def parse_guardianng(html):
 # =============================================================================
     
     
-    
+def parse_champion(html):
+    hold_dict = {}    
+    soup = BeautifulSoup(html, 'lxml')
+    hold_dict['title'] = soup.find('h1', {'class': 'entry-title'}).text
+    hold_dict['date'] = soup.find('time', {'class':re.compile(r'entry-date')}).text
+    body = soup.article.find_all('p')
+    pars = [par.text for par in body]  
+    if soup.find(class_=re.compile(r'caption')):
+        hold_dict['image_captions'] = soup.find(class_=re.compile(r'caption')).text 
+        pars = [par.split('\n') for par in pars if par != hold_dict['image_captions']]
+        pars = sum(pars,[]) #unlist one
+        #if they exist, image captions are first paragraph, hence odd placement here
+    else:
+         hold_dict['image_captions'] = []
+        # image caption removed if it happens to be first paragraph --rare but needs to be done    
+    if pars[0].split(' ')[0].isupper(): # best I could think of is consistency around caps for author names
+        hold_dict['author'] = pars[0].split(',')[0] #sometimes city is in there
+        hold_dict['paragraphs'] = [par.split('\n') for par in pars if hold_dict['author'] not in par]
+    else:
+        hold_dict['author'] = []
+        hold_dict['paragraphs'] = [par.split('\n') for par in pars]
+    if not hold_dict['paragraphs']:
+        hold_dict['paragraphs'] = pars
+            # have to dump everything at some point, this is already a condition fest
+    hold_dict['image_urls'] = []
+    if soup.article.find('img', {'class':'entry-thumb'}):
+        hold_dict['image_urls'] = soup.article.find('img', {'class':'entry-thumb'})['src']
+    return(hold_dict)    
     
     
     
